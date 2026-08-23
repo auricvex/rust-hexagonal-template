@@ -1,0 +1,72 @@
+[workspace]
+resolver = "3"
+members = ["bins/example", "crates/application", "crates/domain", "crates/infrastructure/incoming/http-axum", "crates/infrastructure/outgoing/seaorm-postgres", "crates/shared/migrations"]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+license = "LicenseRef-Proprietary"
+publish = false
+
+[workspace.dependencies]
+application = { path = "crates/application" }
+domain = { path = "crates/domain" }
+http-axum = { path = "crates/infrastructure/incoming/http-axum" }
+migrations = { path = "crates/shared/migrations" }
+seaorm-postgres = { path = "crates/infrastructure/outgoing/seaorm-postgres" }
+
+# External dependencies. Features are configured HERE only (§8) so feature
+# unification stays predictable; member crates inherit via `name.workspace = true`.
+async-trait = "0.1"
+axum = "0.8"
+sea-orm = { version = "2.0.0", features = ["macros", "runtime-tokio-rustls", "sqlx-postgres"] }
+sea-orm-migration = { version = "2.0.0", features = ["runtime-tokio-rustls", "sqlx-postgres"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+thiserror = "2.0"
+tokio = { version = "1.53", features = ["macros", "net", "rt-multi-thread", "signal"] }
+tower = { version = "0.5", features = ["util"] }
+tower-http = { version = "0.6", features = ["trace"] }
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+
+[workspace.lints.clippy]
+all = { level = "deny", priority = -1 }
+nursery = { level = "warn", priority = -1 }  # newest lints; may churn across versions
+pedantic = { level = "deny", priority = -1 }  # style, docs, and hygiene are hard errors
+
+dbg_macro = "deny"  # no debug leftovers
+expect_used = "deny"  # no expect either
+indexing_slicing = "deny"  # use get()/iterators over unchecked indexing
+panic = "deny"  # no panics
+print_stderr = "deny"
+print_stdout = "deny"  # use tracing, not println!
+todo = "deny"  # no stubs left behind
+unimplemented = "deny"
+# Restriction lints, opted in individually: force safe, professional code.
+unwrap_used = "deny"  # no unwrap in production code
+
+missing_const_for_fn = "allow"
+# Pedantic lints that are commonly noisy or false-positive prone.
+module_name_repetitions = "allow"
+must_use_candidate = "allow"
+option_if_let_else = "allow"
+redundant_pub_crate = "allow"
+similar_names = "allow"
+struct_excessive_bools = "allow"
+unnecessary_wraps = "allow"
+wildcard_imports = "allow"  # framework preludes (e.g. sea_orm::prelude)
+
+# Quality gates, enforced workspace-wide. `cargo clippy` fails on any
+# violation of a deny-level lint — no CI flags required.
+[workspace.lints.rust]
+deprecated = "deny"  # stay off deprecated APIs
+elided_lifetimes_in_paths = "warn"
+future_incompatible = { level = "deny", priority = -1 }
+missing_debug_implementations = "deny"  # every type debuggable
+missing_docs = "deny"  # every public item documented
+trivial_casts = "deny"
+trivial_numeric_casts = "deny"
+unreachable_pub = "deny"  # no pub items hidden from the API
+unsafe_code = "forbid"  # no unsafe, ever
+unused_qualifications = "deny"

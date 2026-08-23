@@ -1,0 +1,21 @@
+# Build context exclusions for every docker/<name>/Dockerfile (they all build
+# from the repository root as context). Mirrors .gitignore: build artifacts
+# are huge and platform-specific to the host, so they must never enter an
+# image layer.
+
+# Cargo build artifacts
+target
+debug
+
+# VCS / IDE
+.git
+.idea
+
+# Rust scratch files (see .gitignore)
+**/*.rs.bk
+*.pdb
+**/mutants.out*
+rustc-ice-*.txt
+
+# Container definitions are never needed inside an image
+docker

@@ -1,0 +1,15 @@
+[package]
+name = "domain"
+version.workspace = true
+edition.workspace = true
+publish.workspace = true
+license.workspace = true
+
+# The domain stays dependency-poor by design (see the crate docs): one macro
+# crate for object-safe ports, one for typed errors. Nothing else, ever.
+[dependencies]
+async-trait.workspace = true
+thiserror.workspace = true
+
+[lints]
+workspace = true

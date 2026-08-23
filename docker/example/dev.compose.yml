@@ -1,0 +1,66 @@
+# Development stack for the `example` binary: PostgreSQL (the outgoing
+# seaorm-postgres adapter's dev database) plus the app with rebuild-on-save.
+#
+# Start everything:      docker compose -f docker/example/dev.compose.yml up --build
+# Database only (app on host):
+#                        docker compose -f docker/example/dev.compose.yml up -d postgres
+# then run the binary on the host with
+#   DATABASE_URL=postgres://example:example@localhost:5432/example
+# Tear down (also drops the DB volume):
+#                        docker compose -f docker/example/dev.compose.yml down -v
+
+name: example
+
+services:
+  postgres:
+    image: postgres:18-alpine
+    restart: unless-stopped
+    environment:
+      # Dev-only credentials; replace when copying this folder for a new binary.
+      POSTGRES_USER: example
+      POSTGRES_PASSWORD: example
+      POSTGRES_DB: example
+    ports:
+      - "5432:5432"
+    volumes:
+      # postgres 18+ stores data in a major-version subdirectory under
+      # /var/lib/postgresql, so the volume mounts there — not at .../data.
+      - postgres-data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U example -d example"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  app:
+    build:
+      context: ../..
+      dockerfile: docker/example/Dockerfile
+      target: dev
+    restart: unless-stopped
+    # Reap child processes (cargo-watch spawns cargo run, which spawns the
+    # binary) instead of letting them pile up as zombies under PID 1.
+    init: true
+    environment:
+      RUST_LOG: debug
+      # Host is the postgres service name; same credentials as above.
+      DATABASE_URL: postgres://example:example@postgres:5432/example
+    ports:
+      # Keep in sync with the incoming adapter's bind port and EXPOSE in the
+      # Dockerfile.
+      - "8080:8080"
+    volumes:
+      # Repository at /app; the layers below shadow target/ and the cargo
+      # registry so container (linux) and host artifacts never mix and build
+      # caches survive container recreation.
+      - ../..:/app
+      - cargo-target:/app/target
+      - cargo-registry:/usr/local/cargo/registry
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+volumes:
+  postgres-data:
+  cargo-target:
+  cargo-registry:

@@ -1,0 +1,24 @@
+# Rustfmt configuration (https://rust-lang.github.io/rustfmt/).
+# Uses unstable (nightly-only) options: stable rustfmt ignores them with a
+# warning and falls back to defaults, so run `cargo +nightly fmt` for the
+# full policy. Requires rustfmt >= 1.9.
+
+# Pin both editions so direct `rustfmt` invocations (e.g. editor
+# format-on-save) produce the same output as `cargo fmt`.
+edition = "2024"
+style_edition = "2024"
+
+max_width = 100
+use_small_heuristics = "Max"
+
+# One `use` statement per module, grouped std/core/alloc, external crates,
+# then `self`/`super`/`crate` — the policy used by rust-lang/rust itself.
+imports_granularity = "Module"
+group_imports = "StdExternalCrate"
+
+use_field_init_shorthand = true
+
+# Normalize whitespace in macro_rules! matchers (`$a:ident`, not `$a: ident`).
+format_macro_matchers = true
+
+unstable_features = true
